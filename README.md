@@ -1,8 +1,10 @@
 <div align="center">
 
-![OPC+ Platform Banner](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/assets/opc_platform_banner.png)
+![OPC+ Platform Banner](https://raw.githubusercontent.com/FangPoHsun/opc-cloud-platform/main/assets/opc_platform_banner.png)
 
 # 🚀 OPC+ Cloud Platform
+
+*Developed by [PAL Lab](https://nycu-pal.com/) at National Yang Ming Chiao Tung University*
 
 ### **Next-Generation GPU-Accelerated Freeform Mask Correction**
 
@@ -81,7 +83,7 @@ Seamless integration with your existing workflow through support for **GDS/OASIS
 
 <div align="center">
 
-![Traditional vs GPU-Accelerated OPC](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/assets/workflow_comparison.png)
+![Traditional vs GPU-Accelerated OPC](https://raw.githubusercontent.com/FangPoHsun/opc-cloud-platform/main/assets/workflow_comparison.png)
 
 </div>
 
@@ -104,6 +106,52 @@ Seamless integration with your existing workflow through support for **GDS/OASIS
 ✅ **Cost-Effective**: Pay only for what you use  
 ✅ **Higher Fidelity**: Superior CD uniformity and pattern accuracy  
 ✅ **Global Access**: Work from anywhere with internet connectivity  
+
+---
+
+## 📊 Results & Performance
+
+### Pattern Fidelity Comparison
+
+OPC+ delivers exceptional pattern fidelity for complex freeform shapes, preventing the blurring and distortion common in traditional approaches.
+
+<div align="center">
+
+![Pattern Fidelity Comparison](https://raw.githubusercontent.com/FangPoHsun/opc-cloud-platform/main/assets/pattern_comparison.png)
+
+*Comparison of target layout vs. OPC-corrected mask showing improved pattern accuracy for freeform geometries*
+
+</div>
+
+### Complete Correction Workflow
+
+Our platform implements a comprehensive 3-step correction process: OPC Correction → Aerial Image Simulation → Physical Model Calibration, with experimental validation showing elimination of critical defects.
+
+<div align="center">
+
+![Technical Workflow](https://raw.githubusercontent.com/FangPoHsun/opc-cloud-platform/main/assets/technical_diagram.png)
+
+*Complete correction workflow with SEM validation showing defect elimination (w/ OPC vs. w/o OPC)*
+
+</div>
+
+### Comprehensive Comparison
+
+<div align="center">
+
+![Performance Comparison](https://raw.githubusercontent.com/FangPoHsun/opc-cloud-platform/main/assets/performance_comparison.png)
+
+*Detailed comparison: OPC+ Cloud vs. Traditional OPC across key technical and business dimensions*
+
+</div>
+
+### Key Performance Metrics
+
+- ⚡ **50x Speed Improvement**: Reduce correction time from hours to minutes
+- 🎯 **<2% Load Imbalance**: Consistent, predictable performance across GPU nodes
+- 📐 **Superior CD Uniformity**: Enhanced critical dimension control
+- 🔄 **Native Curvilinear Support**: Preserve optical phase in photonic designs
+- ✅ **Proven Results**: Validated by leading semiconductor research institutions
 
 ---
 
@@ -261,14 +309,71 @@ Our platform combines cutting-edge academic research with real-world industrial 
 
 ---
 
+## 🌐 Platform Access
+
+The OPC+ Cloud Platform is currently available for research and professional use.
+
+<div align="center">
+
+![Platform Login](https://raw.githubusercontent.com/FangPoHsun/opc-cloud-platform/main/assets/platform_login.png)
+
+*OPC+ Cloud Platform - Professional optical proximity correction service*
+
+</div>
+
+### Getting Access
+
+1. **Visit the Platform**: [https://nycu-opcplatform.ddns.net/](https://nycu-opcplatform.ddns.net/login)
+2. **Register**: Create an account for research or professional use
+3. **Start Correcting**: Upload your layouts and experience 50x faster OPC
+
+**Supported by**: National Science and Technology Council (NSTC), Taiwan
+
+---
+
+## 🔬 About PAL Lab
+
+**OPC+** is developed by the **Photonics & Lithography (PAL) Lab** at National Yang Ming Chiao Tung University.
+
+<div align="center">
+
+![PAL Lab Research](https://raw.githubusercontent.com/FangPoHsun/opc-cloud-platform/main/assets/lab_research.png)
+
+*PAL Lab Research Areas: Advancing photonics and computational lithography*
+
+</div>
+
+### Research Focus
+
+PAL Lab specializes in the intersection of photonics and advanced lithography, combining theoretical design with practical fabrication to create next-generation optical devices:
+
+- **Computational Lithography**: High-performance OPC, Source-Mask Optimization (SMO), and Inverse Lithography Technology (ILT) for 193i and EUV
+- **Meta-Optics**: AR waveguides, Metalenses, and large-area nanostructures  
+- **Quantum Annealing**: Applying quantum computing to solve complex optimization in inverse lithography
+- **Advanced Photonics**: Silicon photonics, photonic integrated circuits, and novel optical devices
+
+### Principal Investigator
+
+**Prof. Peichen Yu**
+- Ph.D., University of Michigan (2004)
+- Former Resolution Enhancement Technology (RET) Design Engineer at Intel Corporation (2004-2006)
+- Professor, Department of Photonics, National Yang Ming Chiao Tung University
+- Research Interests: Computational lithography, meta-optics, quantum optimization
+
+[Visit PAL Lab Website →](https://nycu-pal.com/)
+
+---
+
 ## 📞 Contact
 
 Interested in learning more about OPC+ or getting access to the platform?
 
-- **Website**: [Coming Soon]
-- **Email**: [Your Contact Email]
-- **Institution**: National Yang Ming Chiao Tung University (NYCU)
-- **Documentation**: [Link to Docs]
+- **Principal Investigator**: [Prof. Peichen Yu](https://nycu-pal.com/pi.html)
+- **Email**: yup@nycu.edu.tw
+- **Lab Website**: [PAL Lab - Photonics & Lithography](https://nycu-pal.com/)
+- **Platform**: [OPC+ Cloud Platform](https://nycu-opcplatform.ddns.net/)
+- **Institution**: [National Yang Ming Chiao Tung University (NYCU)](https://www.nycu.edu.tw/)
+- **Address**: No.1001 Univ. Rd., East Dist., Hsinchu City 300, Taiwan
 
 ---
 

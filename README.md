@@ -89,47 +89,14 @@ Seamless integration with your existing workflow through support for **GDS/OASIS
 
 ### Traditional OPC Challenges
 
-<table>
-<thead>
-<tr>
-<th>Challenge</th>
-<th>Traditional Approach</th>
-<th style="background-color: #d4edda;"><strong>OPC+ Solution</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Speed</strong></td>
-<td>Slow CPU processing</td>
-<td style="background-color: #d4edda;"><strong>50x faster with GPU acceleration</strong></td>
-</tr>
-<tr>
-<td><strong>Cost</strong></td>
-<td>Expensive per-core licensing</td>
-<td style="background-color: #d4edda;"><strong>Flexible cloud consumption model</strong></td>
-</tr>
-<tr>
-<td><strong>Hardware</strong></td>
-<td>Large upfront investment</td>
-<td style="background-color: #d4edda;"><strong>Zero hardware—cloud native</strong></td>
-</tr>
-<tr>
-<td><strong>Complexity</strong></td>
-<td>Requires deep expertise</td>
-<td style="background-color: #d4edda;"><strong>Intuitive "OPC for Everyone" GUI</strong></td>
-</tr>
-<tr>
-<td><strong>Curved Designs</strong></td>
-<td>Forced Manhattanization</td>
-<td style="background-color: #d4edda;"><strong>Native freeform support</strong></td>
-</tr>
-<tr>
-<td><strong>Scalability</strong></td>
-<td>Limited by local resources</td>
-<td style="background-color: #d4edda;"><strong>Elastic cloud scaling</strong></td>
-</tr>
-</tbody>
-</table>
+| Challenge | Traditional Approach | OPC+ Solution |
+|-----------|---------------------|---------------|
+| **Speed** | Slow CPU processing | 50x faster with GPU acceleration |
+| **Cost** | Expensive per-core licensing | Flexible cloud consumption model |
+| **Hardware** | Large upfront investment | Zero hardware—cloud native |
+| **Complexity** | Requires deep expertise | Intuitive "OPC for Everyone" GUI |
+| **Curved Designs** | Forced Manhattanization | Native freeform support |
+| **Scalability** | Limited by local resources | Elastic cloud scaling |
 
 ### Benefits
 
@@ -170,78 +137,18 @@ Our platform implements a comprehensive 3-step correction process: OPC Correctio
 
 ### Comprehensive Comparison
 
-<table>
-<thead>
-<tr>
-<th>Category</th>
-<th>Traditional OPC</th>
-<th style="background-color: #d4edda;"><strong>OPC+ Cloud</strong></th>
-<th>Business Benefit</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Mask Geometry Support</strong></td>
-<td>Manhattan-based (rectilinear only)</td>
-<td style="background-color: #d4edda;"><strong>Native curvilinear and freeform masks</strong></td>
-<td>Preserves optical phase and device performance</td>
-</tr>
-<tr>
-<td><strong>Design Conversion</strong></td>
-<td>Requires polygon fracturing / Manhattanization</td>
-<td style="background-color: #d4edda;"><strong>No geometry approximation required</strong></td>
-<td>Eliminates layout-induced performance loss</td>
-</tr>
-<tr>
-<td><strong>Optimization Method</strong></td>
-<td>Local rule-based or windowed optimization</td>
-<td style="background-color: #d4edda;"><strong>Global inverse optimization</strong></td>
-<td>Higher pattern fidelity and CD uniformity</td>
-</tr>
-<tr>
-<td><strong>GPU Utilization</strong></td>
-<td>Limited or static GPU assignment</td>
-<td style="background-color: #d4edda;"><strong>Cost-performance–aware GPU allocation</strong></td>
-<td>Optimal cost vs. throughput tradeoff</td>
-</tr>
-<tr>
-<td><strong>Parallelism</strong></td>
-<td>Limited job-level parallelism</td>
-<td style="background-color: #d4edda;"><strong>CUDA Multi-Stream image-level parallelism</strong></td>
-<td>Faster processing of large layouts</td>
-</tr>
-<tr>
-<td><strong>Workload Scheduling</strong></td>
-<td>Static or FIFO</td>
-<td style="background-color: #d4edda;"><strong>Two-tier dynamic scheduling</strong></td>
-<td>Balanced execution across heterogeneous GPUs</td>
-</tr>
-<tr>
-<td><strong>Turnaround Time Predictability</strong></td>
-<td>Variable, bottleneck-prone</td>
-<td style="background-color: #d4edda;"><strong>&lt;2% execution imbalance across nodes</strong></td>
-<td>Reliable delivery schedules</td>
-</tr>
-<tr>
-<td><strong>Deployment Model</strong></td>
-<td>On-prem only</td>
-<td style="background-color: #d4edda;"><strong>Public, private, or hybrid cloud</strong></td>
-<td>Fits foundry security and IT policies</td>
-</tr>
-<tr>
-<td><strong>Manufacturing Validation</strong></td>
-<td>Logic-centric benchmarks</td>
-<td style="background-color: #d4edda;"><strong>Validated on photonics and metasurfaces</strong></td>
-<td>Proven beyond digital CMOS</td>
-</tr>
-<tr>
-<td><strong>Future Readiness</strong></td>
-<td>Limited for curvilinear CMOS</td>
-<td style="background-color: #d4edda;"><strong>Ready for next-generation curvilinear nodes</strong></td>
-<td>Enables new process offerings</td>
-</tr>
-</tbody>
-</table>
+| Category | Traditional OPC | OPC+ Cloud | Business Benefit |
+|----------|----------------|------------|------------------|
+| **Mask Geometry Support** | Manhattan-based (rectilinear only) | Native curvilinear and freeform masks | Preserves optical phase and device performance |
+| **Design Conversion** | Requires polygon fracturing / Manhattanization | No geometry approximation required | Eliminates layout-induced performance loss |
+| **Optimization Method** | Local rule-based or windowed optimization | Global inverse optimization | Higher pattern fidelity and CD uniformity |
+| **GPU Utilization** | Limited or static GPU assignment | Cost-performance–aware GPU allocation | Optimal cost vs. throughput tradeoff |
+| **Parallelism** | Limited job-level parallelism | CUDA Multi-Stream image-level parallelism | Faster processing of large layouts |
+| **Workload Scheduling** | Static or FIFO | Two-tier dynamic scheduling | Balanced execution across heterogeneous GPUs |
+| **Turnaround Time Predictability** | Variable, bottleneck-prone | <2% execution imbalance across nodes | Reliable delivery schedules |
+| **Deployment Model** | On-prem only | Public, private, or hybrid cloud | Fits foundry security and IT policies |
+| **Manufacturing Validation** | Logic-centric benchmarks | Validated on photonics and metasurfaces | Proven beyond digital CMOS |
+| **Future Readiness** | Limited for curvilinear CMOS | Ready for next-generation curvilinear nodes | Enables new process offerings |
 
 ### Key Performance Metrics
 
@@ -443,39 +350,6 @@ The OPC+ Cloud Platform is currently available for research and professional use
 
 ---
 
-## 🔬 About PAL Lab
-
-**OPC+** is developed by the **Photonics & Lithography (PAL) Lab** at National Yang Ming Chiao Tung University.
-
-<div align="center">
-
-![PAL Lab Research](https://raw.githubusercontent.com/FangPoHsun/opc-cloud-platform/main/assets/lab_research.png)
-
-*PAL Lab Research Areas: Advancing photonics and computational lithography*
-
-</div>
-
-### Research Focus
-
-PAL Lab specializes in the intersection of photonics and advanced lithography, combining theoretical design with practical fabrication to create next-generation optical devices:
-
-- **Computational Lithography**: High-performance OPC, Source-Mask Optimization (SMO), and Inverse Lithography Technology (ILT) for 193i and EUV
-- **Meta-Optics**: AR waveguides, Metalenses, and large-area nanostructures  
-- **Quantum Annealing**: Applying quantum computing to solve complex optimization in inverse lithography
-- **Advanced Photonics**: Silicon photonics, photonic integrated circuits, and novel optical devices
-
-### Principal Investigator
-
-**Prof. Peichen Yu**
-- Ph.D., University of Michigan (2004)
-- Former Resolution Enhancement Technology (RET) Design Engineer at Intel Corporation (2004-2006)
-- Professor, Department of Photonics, National Yang Ming Chiao Tung University
-- Research Interests: Computational lithography, meta-optics, quantum optimization
-
-[Visit PAL Lab Website →](https://nycu-pal.com/)
-
----
-
 ## 📞 Contact
 
 Interested in learning more about OPC+ or getting access to the platform?
@@ -491,7 +365,7 @@ Interested in learning more about OPC+ or getting access to the platform?
 
 <div align="center">
 
-### 🌟 **Transform Your Mask Correction Workflow Today** 🌟
+###  **Transform Your Mask Correction Workflow Today** 
 
 **OPC+**: Where Speed Meets Precision in the Cloud
 

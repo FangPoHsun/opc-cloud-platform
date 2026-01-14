@@ -137,13 +137,18 @@ Our platform implements a comprehensive 3-step correction process: OPC Correctio
 
 ### Comprehensive Comparison
 
-<div align="center">
-
-![Performance Comparison](https://raw.githubusercontent.com/FangPoHsun/opc-cloud-platform/main/assets/performance_comparison.png)
-
-*Detailed comparison: OPC+ Cloud vs. Traditional OPC across key technical and business dimensions*
-
-</div>
+| Category | Traditional OPC | OPC+ Cloud | Business Benefit |
+|----------|----------------|------------|------------------|
+| **Mask Geometry Support** | Manhattan-based (rectilinear only) | Native curvilinear and freeform masks | Preserves optical phase and device performance |
+| **Design Conversion** | Requires polygon fracturing / Manhattanization | No geometry approximation required | Eliminates layout-induced performance loss |
+| **Optimization Method** | Local rule-based or windowed optimization | Global inverse optimization | Higher pattern fidelity and CD uniformity |
+| **GPU Utilization** | Limited or static GPU assignment | Cost-performance–aware GPU allocation | Optimal cost vs. throughput tradeoff |
+| **Parallelism** | Limited job-level parallelism | CUDA Multi-Stream image-level parallelism | Faster processing of large layouts |
+| **Workload Scheduling** | Static or FIFO | Two-tier dynamic scheduling | Balanced execution across heterogeneous GPUs |
+| **Turnaround Time Predictability** | Variable, bottleneck-prone | <2% execution imbalance across nodes | Reliable delivery schedules |
+| **Deployment Model** | On-prem only | Public, private, or hybrid cloud | Fits foundry security and IT policies |
+| **Manufacturing Validation** | Logic-centric benchmarks | Validated on photonics and metasurfaces | Proven beyond digital CMOS |
+| **Future Readiness** | Limited for curvilinear CMOS | Ready for next-generation curvilinear nodes | Enables new process offerings |
 
 ### Key Performance Metrics
 
@@ -204,11 +209,18 @@ Our platform implements a comprehensive 3-step correction process: OPC Correctio
 
 OPC+ offers flexible deployment options to meet your security and performance requirements:
 
+<table>
+<tr>
+<td width="33%" valign="top">
+
 ### ☁️ Public Cloud
 - Access a cluster of **12+ GPUs/TPUs**
 - Optimal job scheduling and resource utilization
 - No infrastructure management
 - **Ideal for**: Startups, research labs, and rapid prototyping
+
+</td>
+<td width="33%" valign="top">
 
 ### 🔒 Private Cloud
 - Custom on-premise deployment
@@ -216,11 +228,18 @@ OPC+ offers flexible deployment options to meet your security and performance re
 - Dedicated resources
 - **Ideal for**: Large enterprises and sensitive projects
 
+</td>
+<td width="33%" valign="top">
+
 ### 🔄 Hybrid Model
 - Blend public resources with private infrastructure
 - Balance cost, performance, and security
 - Flexible resource allocation
 - **Ideal for**: Organizations with varying workload demands
+
+</td>
+</tr>
+</table>
 
 ---
 

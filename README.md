@@ -223,7 +223,7 @@ flowchart LR
 ### Step-by-Step
 
 1. **Access the Platform**
-   Navigate to [https://nycu-opcplatform.ddns.net/](https://nycu-opcplatform.ddns.net/) and register an account. The platform supports both English and Traditional Chinese interfaces.
+   Navigate to [https://opc-cloud.com//](https://opc-cloud.com//) and register an account. The platform supports both English and Traditional Chinese interfaces.
 
    <div align="center">
 
@@ -307,7 +307,7 @@ The platform bridges cutting-edge academic research in computational lithography
 
 </div>
 
-**Platform URL**: [https://nycu-opcplatform.ddns.net/](https://nycu-opcplatform.ddns.net/)
+**Platform URL**: [https://opc-cloud.com//](https://opc-cloud.com//)
 
 To request access for research or professional use, register directly on the platform or contact the team via the information below.
 
@@ -322,7 +322,7 @@ To request access for research or professional use, register directly on the pla
 | **Principal Investigator** | [Prof. Peichen Yu](https://nycu-pal.com/pi.html) |
 | **Email** | peichen.yu@nycu.edu.tw |
 | **Lab Websites** | [PAL Lab — Photonics & Advanced Lithography](https://nycu-pal.com/) · [NSL Lab — Network and System Laboratory](https://nsl.cs.nycu.edu.tw) |
-| **Platform** | [https://nycu-opcplatform.ddns.net/](https://nycu-opcplatform.ddns.net/) |
+| **Platform** | [https://opc-cloud.com//](https://opc-cloud.com/) |
 | **Institution** | [National Yang Ming Chiao Tung University (NYCU)](https://www.nycu.edu.tw/) |
 | **Address** | No. 1001 University Road, East District, Hsinchu City 300, Taiwan |
 | **Phone** | +886-3-5712121 ext. 56357 |

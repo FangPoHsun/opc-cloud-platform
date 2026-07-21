@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://opc-cloud-platform.github.io/opc-cloud-platform/sitemap.xml

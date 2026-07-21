@@ -18,6 +18,10 @@
       background-attachment: fixed;
       line-height: 1.7;
     }
+    /* iOS Safari renders background-attachment:fixed poorly — fall back to scroll */
+    @supports (-webkit-touch-callout: none) {
+      body { background-attachment: scroll; }
+    }
     /* Justify only on wide screens where columns are wide enough */
     @media (min-width: 860px) {
       p, li { text-align: justify; hyphens: auto; }
@@ -396,6 +400,7 @@
       background: var(--bg-alt); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 0.5rem 1rem;
       font-size: 0.85rem; font-family: monospace; color: var(--blue);
+      max-width: 100%; overflow-wrap: anywhere;
     }
     .nstc-note { font-size: 0.82rem; color: var(--text-muted); margin-top: 1rem; }
 
@@ -417,6 +422,7 @@
     .contact-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
     .contact-table td { padding: 0.65rem 0; border-bottom: 1px solid var(--border); vertical-align: top; }
     .contact-table td:first-child { font-weight: 600; color: var(--navy); width: 42%; padding-right: 1rem; }
+    .contact-table a { overflow-wrap: anywhere; }
 
     /* ── Footer ───────────────────────────────────────────────── */
     footer {
@@ -469,6 +475,10 @@
       }
       .highlight-item .h-value { font-size: 1.25rem; }
       .highlight-item .h-label { font-size: 0.72rem; }
+      /* odd trailing item spans full width instead of sitting alone in one column */
+      .highlight-bar .container > .highlight-item:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
+      .diagram-wrap { padding: 1rem; }
 
       /* Hero */
       .hero-content { padding: 3rem 1.1rem 2.5rem; }
@@ -528,6 +538,7 @@
     <li><a href="#features">Features</a></li>
     <li><a href="#workflow">Workflow</a></li>
     <li><a href="#comparison">Comparison</a></li>
+    <li><a href="#hardware">Sizing</a></li>
     <li><a href="#validation">Validation</a></li>
     <li><a href="#references">References</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -861,6 +872,166 @@ flowchart LR
   </div>
 </section>
 
+<!-- ══ HARDWARE SIZING ESTIMATOR ═══════════════════════════════ -->
+<style>
+  .hw-wrap{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:1.5rem;margin-top:2rem}
+  .hw-panel{background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .hw-panel-h{padding:.8rem 1.1rem;border-bottom:1px solid var(--border);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)}
+  .hw-panel-b{padding:1.2rem}
+  .hw-field{margin-bottom:1.1rem}.hw-field:last-child{margin-bottom:0}
+  .hw-lab{display:flex;justify-content:space-between;align-items:baseline;font-size:.85rem;color:var(--text-muted);margin-bottom:.35rem}
+  .hw-lab b{color:var(--text);font-weight:600}
+  .hw-row{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+  input[type=range].hw-rng{width:100%;accent-color:var(--blue);height:4px}
+  .hw-upload{display:flex;align-items:center;justify-content:center;gap:.55rem;width:100%;
+    background:var(--blue);color:#fff;border:0;border-radius:var(--radius);
+    padding:.85rem 1rem;font:inherit;font-size:.92rem;font-weight:700;letter-spacing:.01em;cursor:pointer;
+    box-shadow:0 2px 10px rgba(37,99,235,.35);transition:background .15s,transform .1s}
+  .hw-upload:hover{background:var(--blue-dark)}
+  .hw-upload:active{transform:translateY(1px)}
+  .hw-upload.over{background:var(--blue-dark);outline:3px dashed rgba(255,255,255,.85);outline-offset:-6px}
+  .hw-upload:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+  .hw-upload .ic{font-size:1.15rem;line-height:1}
+  .hw-upload-sub{font-size:.73rem;color:var(--text-muted);text-align:center;margin-top:.45rem;line-height:1.45}
+  .hw-upload-res{font-size:.8rem;margin-top:.5rem;line-height:1.5;text-align:center;overflow-wrap:anywhere}
+  .hw-upload-res .ok{color:#1a7a4a;font-weight:600}
+  .hw-upload-res .err{color:var(--red)}
+  .hw-chips{display:flex;gap:.4rem;margin-top:.55rem}
+  .hw-chip{flex:1;border:1px solid var(--border);border-radius:var(--radius);padding:.4rem .3rem;background:#fff;cursor:pointer;font-size:.72rem;color:var(--text);transition:border-color .12s}
+  .hw-chip:hover{border-color:var(--blue)}
+  .hw-answer{padding:1.4rem 1.4rem 1.2rem;border-bottom:1px solid var(--border)}
+  .hw-num{font-size:3.6rem;font-weight:700;color:var(--blue);line-height:.95;font-variant-numeric:tabular-nums}
+  .hw-answer .lab{color:var(--text-muted);font-size:.95rem;max-width:34ch}
+  .hw-answer .lab b{color:var(--text)}
+  .hw-stats{display:grid;grid-template-columns:repeat(3,1fr)}
+  .hw-stat{padding:.9rem 1.1rem;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+  .hw-stat:nth-child(3){border-right:none}
+  .hw-stat .k{font-size:.66rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted)}
+  .hw-stat .v{font-size:1.1rem;font-weight:600;margin-top:.25rem;font-variant-numeric:tabular-nums}
+  .hw-callout{padding:.85rem 1.1rem;font-size:.82rem;color:var(--text-muted);background:var(--bg-alt);border-left:4px solid var(--blue)}
+  .hw-table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:.4rem;font-variant-numeric:tabular-nums}
+  .hw-table th,.hw-table td{padding:.5rem .7rem;border-bottom:1px solid var(--border);text-align:right}
+  .hw-table th:first-child,.hw-table td:first-child{text-align:left}
+  .hw-table th{font-size:.66rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);font-weight:600}
+  .hw-table tr.ref{background:rgba(37,99,235,.06)}
+  .hw-tag{display:inline-block;font-size:.62rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    color:#fff;background:var(--blue);border-radius:20px;padding:.1rem .45rem;margin-left:.4rem;vertical-align:middle}
+  .hw-note{font-size:.75rem;color:var(--text-muted);margin-top:.6rem;line-height:1.5}
+  /* density guide */
+  .hw-guide{margin-top:1.5rem;background:#fff;border:1px solid var(--border);border-left:5px solid var(--blue);border-radius:var(--radius);padding:1.2rem 1.4rem;box-shadow:var(--shadow)}
+  .hw-guide h3{font-size:1rem;color:var(--navy);margin-bottom:.5rem}
+  .hw-guide p{font-size:.87rem;color:var(--text-muted);margin-bottom:.9rem;max-width:82ch}
+  .hw-guide .pick{display:inline-block;background:rgba(37,99,235,.09);color:var(--blue);font-weight:700;border-radius:4px;padding:.1rem .45rem;white-space:nowrap}
+
+  /* ── nav: more items now, so keep one line then collapse earlier ── */
+  .nav-links a,.nav-brand{white-space:nowrap}
+  @media (max-width:1200px){
+    .nav-links{gap:0}
+    .nav-links a{font-size:.78rem;padding:.4rem .5rem}
+    .nav-cta{padding:.4rem .7rem !important}
+  }
+  @media (max-width:1024px){
+    .nav-links{display:none;flex-direction:column;position:absolute;top:60px;left:0;right:0;
+      background:var(--blue);padding:.75rem 1rem 1rem;gap:.1rem;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+    .nav-links.open{display:flex}
+    .nav-links a{padding:.6rem .75rem;font-size:.95rem}
+    .nav-cta{margin-top:.5rem;text-align:center}
+    .nav-toggle{display:block}
+  }
+
+  /* ── estimator responsive ── */
+  @media (max-width:860px){
+    .hw-wrap{grid-template-columns:1fr}
+    .hw-num{font-size:2.8rem}
+    .hw-answer{padding:1.1rem}
+    .hw-panel-b{padding:1rem}
+    .hw-guide{padding:1rem 1.1rem}
+  }
+  @media (max-width:480px){
+    .hw-stats{grid-template-columns:1fr}
+    .hw-stat{border-right:none !important}
+    .hw-num{font-size:2.3rem}
+    .hw-row{grid-template-columns:1fr}
+    .hw-chips{flex-wrap:wrap}
+    .hw-chip{flex:1 1 30%;font-size:.68rem}
+    .hw-table th,.hw-table td{padding:.45rem .5rem;font-size:.76rem}
+    .hw-answer .lab{font-size:.88rem}
+  }
+</style>
+<section id="hardware">
+  <div class="container">
+    <div class="section-label">Hardware Sizing</div>
+    <h2 class="section-title">How much hardware do you need?</h2>
+    <p>Estimate the GPU fleet to finish OPC on your layout by your deadline — grounded in <strong>measured</strong> production runs (~4&nbsp;s per correction tile on an RTX&nbsp;Pro&nbsp;6000). Upload a GDS or OASIS file to auto-detect the die size <em>and</em> pattern density, or set them directly. Everything runs in your browser — your file never leaves your computer.</p>
+
+    <div class="hw-wrap">
+      <!-- inputs -->
+      <div class="hw-panel">
+        <div class="hw-panel-h">Your layout</div>
+        <div class="hw-panel-b">
+          <div class="hw-field">
+            <button id="hwDrop" class="hw-upload" type="button" aria-label="Upload a GDS or OASIS layout file">
+              <span class="ic" aria-hidden="true">⤒</span> Upload GDS / OASIS layout
+            </button>
+            <div class="hw-upload-sub">Click or drag &amp; drop — die size and pattern density are detected automatically.<br>Your file is analyzed locally and never leaves your browser.</div>
+            <div id="hwDropRes" class="hw-upload-res" aria-live="polite"></div>
+            <input id="hwFile" type="file" accept=".gds,.gds2,.gdsii,.oas,.oasis" hidden>
+          </div>
+          <div class="hw-field hw-row">
+            <div><div class="hw-lab">Width <b><span id="hwWv">16</span> mm</b></div><input class="hw-rng" type="range" id="hwW" min="0.5" max="33" step="0.5" value="16"></div>
+            <div><div class="hw-lab">Height <b><span id="hwHv">16</span> mm</b></div><input class="hw-rng" type="range" id="hwH" min="0.5" max="33" step="0.5" value="16"></div>
+          </div>
+          <div class="hw-field"><div class="hw-lab">Pixel size <b><span id="hwPxv">2.6</span> nm</b></div><input class="hw-rng" type="range" id="hwPx" min="1" max="40" step="0.1" value="2.6"><div class="hw-note" style="margin-top:.35rem">Production OPC runs 2–5 nm. Finer pixel → far more tiles.</div></div>
+          <div class="hw-field"><div class="hw-lab">Pattern density <b><span id="hwDv">10</span>%</b></div><input class="hw-rng" type="range" id="hwD" min="1" max="100" step="1" value="10">
+            <div class="hw-chips"><button class="hw-chip" data-d="1" type="button">Sparse 1%</button><button class="hw-chip" data-d="12" type="button">Array 12%</button><button class="hw-chip" data-d="70" type="button">Dense 70%</button></div></div>
+          <div class="hw-field"><div class="hw-lab">Deadline <b><span id="hwDlv">3</span> days</b></div><input class="hw-rng" type="range" id="hwDl" min="0.5" max="30" step="0.5" value="3"></div>
+        </div>
+      </div>
+
+      <!-- result -->
+      <div class="hw-panel">
+        <div class="hw-answer">
+          <div class="section-label" style="margin-bottom:.5rem">Recommended · RTX Pro 6000</div>
+          <div style="display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap">
+            <div class="hw-num" id="hwCards">—</div>
+            <div class="lab" id="hwCardsLab"></div>
+          </div>
+        </div>
+        <div class="hw-stats">
+          <div class="hw-stat"><div class="k">Correction workload</div><div class="v" id="hwTiles">—</div></div>
+          <div class="hw-stat"><div class="k">Estimated completion</div><div class="v" id="hwFinish">—</div></div>
+          <div class="hw-stat"><div class="k">Prep &amp; assembly</div><div class="v" id="hwFloor">—</div></div>
+        </div>
+        <div class="hw-callout" id="hwCallout"></div>
+        <div class="hw-panel-b">
+          <div class="hw-panel-h" style="border:0;padding:0 0 .4rem">Estimated hardware investment</div>
+          <div style="overflow-x:auto"><table class="hw-table"><thead><tr><th>GPU</th><th>Units</th><th>Finish</th><th>Total&nbsp;$</th></tr></thead><tbody id="hwCostBody"></tbody></table></div>
+          <div class="hw-note">A recommended Pro&nbsp;6000 node ships fully configured — 96&nbsp;GB per card, ECC memory, the OPC+ software stack, and support. Runtime depends on your pattern, so treat this as a planning estimate; we confirm the exact figure from a calibration run on your own layout. Hardware prices are indicative market values.</div>
+          <div style="margin-top:1rem"><a href="#contact" class="btn btn-primary" style="display:inline-block">Get an exact quote for your layout →</a></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- density guidance -->
+    <div class="hw-guide">
+      <h3>How do I estimate pattern density?</h3>
+      <p>Density is the share of <strong>tiles</strong> that contain any pattern — <em>not</em> the area your polygons cover. Each tile is 2048&nbsp;px across, and a tile counts as soon as it holds a single feature. Scattered small structures therefore push density <strong>higher</strong> than raw area suggests. <strong>Uploading your GDS/OASIS file above measures this automatically</strong> on the same tile grid the estimator uses. If you can't upload and are unsure, pick the higher band — it's the safer way to size hardware.</p>
+      <div style="overflow-x:auto">
+        <table class="hw-table">
+          <thead><tr><th>If your layout looks like…</th><th>Use</th></tr></thead>
+          <tbody>
+            <tr><td>Isolated test structures or sparse gratings on a mostly empty field</td><td><span class="pick">1–3%</span></td></tr>
+            <tr><td>Labels, alignment marks, a few device blocks on a large die</td><td><span class="pick">5–10%</span></td></tr>
+            <tr><td>Mixed test chip, periodic arrays, photonic device banks</td><td><span class="pick">10–20%</span></td></tr>
+            <tr><td>Dense periodic arrays, metasurface / metalens, full-field patterning</td><td><span class="pick">60–80%</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="hw-note"><strong>Rule of thumb:</strong> if your pattern is spread across most of the die, you're in the upper bands; if it's concentrated in a small area of a big die, you're in the lower ones. These bands come from <strong>measured production layouts</strong> — a calibration run on your own file returns the exact figure.</div>
+    </div>
+  </div>
+</section>
+
 <!-- ══ GETTING STARTED ══════════════════════════════════════════ -->
 <section id="getting-started" class="alt-bg">
   <div class="container">
@@ -1096,6 +1267,442 @@ flowchart LR
   });
   // Initialize Mermaid
   mermaid.initialize({ startOnLoad: true, theme: 'default', flowchart: { curve: 'basis' } });
+</script>
+
+<!-- Hardware Sizing Estimator — client-side, no backend -->
+<script>
+(function(){
+  "use strict";
+  var S={w:16,h:16,px:2.6,d:0.10,dl:3};
+  // 4 s per active tile on a FULL RTX Pro 6000 (no MIG) = 0.25 tiles/s.
+  // MIG-4 yields 4 isolated workers at ~21 s each = 0.19 tiles/s — i.e. ~24% LESS
+  // aggregate throughput. Sizing below assumes full-card mode; other GPUs run
+  // full-GPU too, scaled by FP32 TFLOPS from this same anchor.
+  var SECT=4, TILE=2048, S1=0.0011, S3=0.0033, REF_TF=125;
+  // [name, FP32 TFLOPS, price USD, isRef] — editable market estimates
+  var GPUS=[["RTX Pro 6000",125,8500,true],["RTX 5090",105,2000],["RTX 4090",83,1700],
+            ["L40S",92,9000],["H100 80GB",67,28000],["A100 80GB",19.5,15000]];
+  var $=function(id){return document.getElementById(id);};
+  var ceil=function(x){return Math.ceil(x-1e-9);};
+  function fInt(n){if(n>=1e9)return (n/1e9).toFixed(2)+'B';if(n>=1e6)return (n/1e6).toFixed(n<1e7?2:1)+'M';if(n>=1e3)return (n/1e3).toFixed(n<1e4?1:0)+'k';return Math.round(n).toString();}
+  function fDays(x){return x>=1?x.toFixed(1)+' d':(x*24).toFixed(x*24<10?1:0)+' h';}
+  function fMoney(n){if(n>=1e6)return '$'+(n/1e6).toFixed(2)+'M';if(n>=1e3)return '$'+(n/1e3).toFixed(0)+'k';return '$'+Math.round(n);}
+  function densTxt(){var p=S.d*100;return p<1?p.toFixed(1):Math.round(p).toString();}
+
+  function compute(){
+    var pitch=TILE*S.px/1e6;                       // mm per tile
+    var total=ceil(S.w/pitch)*ceil(S.h/pitch);
+    var active=Math.round(total*S.d);
+    var floor=total*(S1+S3)/86400;                 // serial step1+step3 (days)
+    var avail=S.dl-floor, feasible=avail>0.002;
+    var cards=feasible?Math.max(1,ceil(active*SECT/(avail*86400))):null;
+    var finish=feasible?floor+active*SECT/(cards*86400):null;
+    return {total:total,active:active,floor:floor,avail:avail,feasible:feasible,cards:cards,finish:finish};
+  }
+
+  function render(){
+    var r=compute();
+    $('hwWv').textContent=S.w;$('hwHv').textContent=S.h;$('hwPxv').textContent=S.px;
+    $('hwDv').textContent=densTxt();$('hwDlv').textContent=S.dl;
+    $('hwTiles').innerHTML=fInt(r.active)+' <span style="color:var(--text-muted);font-weight:400">/ '+fInt(r.total)+'</span>';
+    $('hwFloor').textContent=fDays(r.floor);
+    if(r.feasible){
+      $('hwCards').textContent=r.cards;$('hwCards').style.color='';
+      $('hwCardsLab').innerHTML='× RTX Pro 6000 cards to correct a <b>'+S.w+' × '+S.h+' mm</b> layout within <b>'+S.dl+' days</b>.';
+      $('hwFinish').textContent=fDays(r.finish);
+      $('hwCallout').innerHTML='Your layout breaks into about <b>'+fInt(r.active)+'</b> correction tiles. On <b>'+r.cards+'</b> Pro 6000 card'+(r.cards>1?'s':'')+' that completes in roughly <b>'+fDays(r.finish)+'</b>.';
+    } else {
+      $('hwCards').textContent='—';$('hwCards').style.color='var(--red)';
+      $('hwCardsLab').innerHTML='This schedule can’t be met at any fleet size.';
+      $('hwFinish').innerHTML='<span style="color:var(--red)">≥'+fDays(r.floor)+'</span>';
+      $('hwCallout').innerHTML='<b style="color:var(--red)">Schedule too tight.</b> Preparing and assembling a layout this size takes about <b>'+fDays(r.floor)+'</b> on its own. Try a coarser pixel, a lower density, or a longer schedule — or talk to us about options.';
+    }
+    var avail=Math.max(1e-6,r.avail)*86400, k=(1/SECT)/REF_TF, rows=[];
+    GPUS.forEach(function(g){var tps=g[1]*k;var units=r.feasible?Math.max(1,ceil(r.active/(tps*avail))):null;var cost=units?units*g[2]:null;rows.push([g,tps,units,cost]);});
+    $('hwCostBody').innerHTML=rows.map(function(o){var g=o[0],units=o[2],cost=o[3];var fin=units?r.floor+r.active/(o[1]*units*86400):null;
+      return '<tr class="'+(g[3]?'ref':'')+'"><td>'+g[0]+(g[3]?' <span class="hw-tag">Recommended</span>':'')+'</td><td>'+(units!=null?units.toLocaleString():'—')+'</td><td>'+(fin!=null?fDays(fin):'—')+'</td><td>'+(cost!=null?fMoney(cost):'—')+'</td></tr>';}).join('');
+  }
+
+  // ── ranges + chips ──
+  [['hwW','w'],['hwH','h'],['hwPx','px'],['hwDl','dl']].forEach(function(p){$(p[0]).addEventListener('input',function(){S[p[1]]=parseFloat(this.value);render();});});
+  $('hwD').addEventListener('input',function(){S.d=parseFloat(this.value)/100;render();});
+  Array.prototype.forEach.call(document.querySelectorAll('.hw-chip'),function(b){b.addEventListener('click',function(){S.d=parseInt(this.getAttribute('data-d'),10)/100;$('hwD').value=S.d*100;render();});});
+
+  // ── client-side layout analysis: die size + pattern density (GDS & OASIS) ──
+  /*PARSE-BEGIN*/
+  function rstr(dv,p,pe){var s='';for(var k=p;k<pe;k++){var c=dv.getUint8(k);if(!c)break;s+=String.fromCharCode(c);}return s;}
+  function greal(dv,o){var b=dv.getUint8(o),sg=(b&0x80)?-1:1,ex=(b&0x7f)-64,m=0;for(var k=1;k<8;k++)m=m*256+dv.getUint8(o+k);return sg*(m/Math.pow(2,56))*Math.pow(16,ex);}
+  function parseGDS(buf){var dv=new DataView(buf),i=0,n=buf.byteLength,dbu=null,st={},els=null,el=null;
+    while(i+4<=n){var rl=dv.getUint16(i);if(rl<4)break;var rt=dv.getUint8(i+2),p=i+4,pe=i+rl;
+      if(rt===0x03)dbu=greal(dv,p+8);else if(rt===0x05)els=[];else if(rt===0x06){st[rstr(dv,p,pe)]=els;}
+      else if(rt===0x07)els=null;else if(rt===0x08||rt===0x2d)el={t:'p',xy:[]};else if(rt===0x09)el={t:'p',xy:[]};
+      else if(rt===0x0a)el={t:'s',xy:[]};else if(rt===0x0b)el={t:'a',xy:[]};else if(rt===0x0c)el={t:'x',xy:[]};
+      else if(rt===0x12&&el)el.sn=rstr(dv,p,pe);
+      else if(rt===0x13&&el&&p+4<=pe)el.cr=[dv.getInt16(p),dv.getInt16(p+2)];
+      else if(rt===0x10&&el){for(var q=p;q+8<=pe;q+=8)el.xy.push([dv.getInt32(q),dv.getInt32(q+4)]);}
+      else if(rt===0x11){if(el&&els&&el.t!=='x')els.push(el);el=null;}
+      i+=rl;}
+    return {dbu:dbu||1e-9,st:st};}
+  function bb(st,nm,memo,d){if(d>60||!st[nm])return null;if(nm in memo)return memo[nm];memo[nm]=null;var b=null;
+    function e(x,y){if(!b)b=[x,y,x,y];else{if(x<b[0])b[0]=x;if(y<b[1])b[1]=y;if(x>b[2])b[2]=x;if(y>b[3])b[3]=y;}}
+    st[nm].forEach(function(o){if(o.t==='p'){o.xy.forEach(function(pt){e(pt[0],pt[1]);});}
+      else if(o.t==='s'&&o.xy.length){var c=bb(st,o.sn,memo,d+1),g=o.xy[0];if(c){e(g[0]+c[0],g[1]+c[1]);e(g[0]+c[2],g[1]+c[3]);}else e(g[0],g[1]);}
+      else if(o.t==='a'&&o.xy.length){var c2=bb(st,o.sn,memo,d+1)||[0,0,0,0],pts;
+        if(o.cr&&o.cr[0]>0&&o.cr[1]>0&&o.xy.length>=3){
+          var q0=o.xy[0],cN=o.cr[0],rN=o.cr[1],
+              csx=(o.xy[1][0]-q0[0])/cN,csy=(o.xy[1][1]-q0[1])/cN,
+              rsx=(o.xy[2][0]-q0[0])/rN,rsy=(o.xy[2][1]-q0[1])/rN;
+          pts=[];[0,cN-1].forEach(function(ci){[0,rN-1].forEach(function(ri){pts.push([q0[0]+csx*ci+rsx*ri,q0[1]+csy*ci+rsy*ri]);});});
+        }else{pts=o.xy.slice();if(pts.length>=3)pts.push([pts[1][0]+pts[2][0]-pts[0][0],pts[1][1]+pts[2][1]-pts[0][1]]);}
+        pts.forEach(function(pt){e(pt[0]+c2[0],pt[1]+c2[1]);e(pt[0]+c2[2],pt[1]+c2[3]);});}});
+    memo[nm]=b;return b;}
+  // ── OASIS (SEMI P39) subset reader — bounding box + density estimation ──
+  var DIR4=[[1,0],[0,1],[-1,0],[0,-1]];
+  var DIR8=[[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,1],[-1,-1],[1,-1]];
+  function OasRd(u8){this.s=[[u8,0]];this.modalRep=null;}
+  OasRd.prototype={
+    src:function(){var s=this.s;while(s.length&&s[s.length-1][1]>=s[s.length-1][0].length)s.pop();return s.length?s[s.length-1]:null;},
+    eof:function(){return !this.src();},
+    u8:function(){var c=this.src();if(!c)throw new Error('eof');return c[0][c[1]++];},
+    bytes:function(n){var c=this.src();if(c&&c[0].length-c[1]>=n){var out=c[0].subarray(c[1],c[1]+n);c[1]+=n;return out;}var o=new Uint8Array(n);for(var i=0;i<n;i++)o[i]=this.u8();return o;},
+    uint:function(){var v=0,sh=1;for(;;){var b=this.u8();v+=(b&0x7f)*sh;if(!(b&0x80))return v;sh*=128;}},
+    sint:function(){var v=this.uint();return (v&1)?-(v-1)/2:v/2;},
+    real:function(t){if(t===undefined)t=this.uint();
+      if(t===0)return this.uint();if(t===1)return -this.uint();
+      if(t===2)return 1/this.uint();if(t===3)return -1/this.uint();
+      if(t===4){var a=this.uint();return a/this.uint();}
+      if(t===5){var a2=this.uint();return -a2/this.uint();}
+      if(t===6){var b4=this.bytes(4);return new DataView(b4.buffer,b4.byteOffset,4).getFloat32(0,true);}
+      if(t===7){var b8=this.bytes(8);return new DataView(b8.buffer,b8.byteOffset,8).getFloat64(0,true);}
+      throw new Error('real type '+t);},
+    str:function(){var n=this.uint(),b=this.bytes(n),s='';for(var i=0;i<n;i++)s+=String.fromCharCode(b[i]);return s;},
+    gdelta:function(){var v=this.uint();if(v&1){var m=Math.floor(v/4);return [(v&2)?-m:m,this.sint()];}var d=DIR8[(v>>1)&7],m0=Math.floor(v/16);return [d[0]*m0,d[1]*m0];},
+    plist:function(){var t=this.uint(),n=this.uint(),pts=[],x=0,y=0,i,v,m,d;
+      if(t===0||t===1){var hz=(t===0);for(i=0;i<n;i++){var s1=this.sint();if(hz)x+=s1;else y+=s1;hz=!hz;pts.push([x,y]);}}
+      else if(t===2){for(i=0;i<n;i++){v=this.uint();m=Math.floor(v/4);d=DIR4[v&3];x+=d[0]*m;y+=d[1]*m;pts.push([x,y]);}}
+      else if(t===3){for(i=0;i<n;i++){v=this.uint();m=Math.floor(v/8);d=DIR8[v&7];x+=d[0]*m;y+=d[1]*m;pts.push([x,y]);}}
+      else if(t===4){for(i=0;i<n;i++){d=this.gdelta();x+=d[0];y+=d[1];pts.push([x,y]);}}
+      else if(t===5){var ax=0,ay=0;for(i=0;i<n;i++){d=this.gdelta();ax+=d[0];ay+=d[1];x+=ax;y+=ay;pts.push([x,y]);}}
+      else throw new Error('point list type '+t);
+      return pts;},
+    rep:function(){var t=this.uint(),i,n,g,offs,acc;
+      if(t===0){if(!this.modalRep)throw new Error('modal repetition unset');return this.modalRep;}
+      var r;
+      if(t===1){var nx=this.uint()+2,ny=this.uint()+2,dx=this.uint(),dy=this.uint();r={nx:nx,ny:ny,vx:[dx,0],vy:[0,dy]};}
+      else if(t===2){n=this.uint()+2;r={nx:n,ny:1,vx:[this.uint(),0],vy:[0,0]};}
+      else if(t===3){n=this.uint()+2;r={nx:1,ny:n,vx:[0,0],vy:[0,this.uint()]};}
+      else if(t===4||t===5){n=this.uint()+2;g=(t===5)?this.uint():1;offs=[[0,0]];acc=0;for(i=1;i<n;i++){acc+=this.uint()*g;offs.push([acc,0]);}r={offs:offs};}
+      else if(t===6||t===7){n=this.uint()+2;g=(t===7)?this.uint():1;offs=[[0,0]];acc=0;for(i=1;i<n;i++){acc+=this.uint()*g;offs.push([0,acc]);}r={offs:offs};}
+      else if(t===8){var n8=this.uint()+2,m8=this.uint()+2,va=this.gdelta(),vb=this.gdelta();r={nx:n8,ny:m8,vx:va,vy:vb};}
+      else if(t===9){var n9=this.uint()+2,v9=this.gdelta();r={nx:n9,ny:1,vx:v9,vy:[0,0]};}
+      else if(t===10||t===11){n=this.uint()+2;g=(t===11)?this.uint():1;offs=[[0,0]];var cx=0,cy=0;for(i=1;i<n;i++){var gd=this.gdelta();cx+=gd[0]*g;cy+=gd[1]*g;offs.push([cx,cy]);}r={offs:offs};}
+      else throw new Error('repetition type '+t);
+      this.modalRep=r;return r;}
+  };
+  function inflateBytes(bytes){
+    if(typeof DecompressionStream==='undefined')return Promise.reject(new Error('no DecompressionStream'));
+    function run(fmt){var ds=new DecompressionStream(fmt);return new Response(new Blob([bytes]).stream().pipeThrough(ds)).arrayBuffer().then(function(ab){return new Uint8Array(ab);});}
+    return run('deflate-raw')['catch'](function(){return run('deflate');});
+  }
+  function parseOAS(buf){
+    var rd=new OasRd(new Uint8Array(buf)),MAGIC='%SEMI-OASIS\r\n',i;
+    for(i=0;i<13;i++)if(rd.u8()!==MAGIC.charCodeAt(i))throw new Error('not an OASIS file');
+    var unit=1000,cells={},namesByRef={},autoName=0,cur=null,M=null,elBudget=1200000;
+    function resetM(){M={abs:true,x:0,y:0,px:0,py:0,tx:0,ty:0,pcell:null,w:0,h:0,r:0,hw:0,pp:null,pl:null,ct:0};rd.modalRep=null;}
+    resetM();
+    function arr(k){return cells[k]||(cells[k]=[]);}
+    function ptsBB(pts){var x1=0,y1=0,x2=0,y2=0;if(pts)for(var k=0;k<pts.length;k++){var p3=pts[k];if(p3[0]<x1)x1=p3[0];if(p3[1]<y1)y1=p3[1];if(p3[0]>x2)x2=p3[0];if(p3[1]>y2)y2=p3[1];}return [x1,y1,x2,y2];}
+    function offsFor(rep,cap){if(!rep)return [[0,0]];
+      if(rep.offs)return rep.offs.length<=cap?rep.offs:null;
+      var n=rep.nx*rep.ny;if(n>cap)return null;var o=[],c2,r2;
+      for(c2=0;c2<rep.nx;c2++)for(r2=0;r2<rep.ny;r2++)o.push([rep.vx[0]*c2+rep.vy[0]*r2,rep.vx[1]*c2+rep.vy[1]*r2]);
+      return o;}
+    function repExt(rep){var x1=0,y1=0,x2=0,y2=0,pts;
+      if(rep.offs)pts=rep.offs;
+      else pts=[[0,0],[rep.vx[0]*rep.nx,rep.vx[1]*rep.nx],[rep.vy[0]*rep.ny,rep.vy[1]*rep.ny],[rep.vx[0]*rep.nx+rep.vy[0]*rep.ny,rep.vx[1]*rep.nx+rep.vy[1]*rep.ny]];
+      pts.forEach(function(o){if(o[0]<x1)x1=o[0];if(o[1]<y1)y1=o[1];if(o[0]>x2)x2=o[0];if(o[1]>y2)y2=o[1];});
+      return [x1,y1,x2,y2];}
+    function shape(x1,y1,x2,y2,rep){if(!cur)return;
+      var t0;if(x2<x1){t0=x1;x1=x2;x2=t0;}if(y2<y1){t0=y1;y1=y2;y2=t0;}
+      var o=elBudget>0?offsFor(rep,1000):null;
+      if(o){for(var k=0;k<o.length;k++){cur.push({t:'p',xy:[[x1+o[k][0],y1+o[k][1]],[x2+o[k][0],y2+o[k][1]]]});elBudget--;}}
+      else{var e=repExt(rep);cur.push({t:'p',xy:[[x1+e[0],y1+e[1]],[x2+e[2],y2+e[3]]]});elBudget--;}}
+    function ref(nm,x,y,rep){if(!cur||nm==null)return;
+      if(!rep){cur.push({t:'s',sn:nm,xy:[[x,y]]});elBudget--;return;}
+      var o=elBudget>0?offsFor(rep,1000):null;
+      if(o){for(var k=0;k<o.length;k++){cur.push({t:'s',sn:nm,xy:[[x+o[k][0],y+o[k][1]]]});elBudget--;}return;}
+      if(rep.offs){var e=repExt(rep);cur.push({t:'a',sn:nm,cr:null,xy:[[x+e[0],y+e[1]],[x+e[2],y+e[1]],[x+e[0],y+e[3]]]});}
+      else cur.push({t:'a',sn:nm,cr:[rep.nx,rep.ny],xy:[[x,y],[x+rep.vx[0]*rep.nx,y+rep.vx[1]*rep.nx],[x+rep.vy[0]*rep.ny,y+rep.vy[1]*rep.ny]]});
+      elBudget--;}
+    function interval(){var t=rd.uint();if(t===4){rd.uint();rd.uint();}else if(t>=1&&t<=3)rd.uint();}
+    function propValues(count){for(var k=0;k<count;k++){var t=rd.uint();if(t<=7)rd.real(t);else if(t===8)rd.uint();else if(t===9)rd.sint();else if(t<=12)rd.str();else rd.uint();}}
+    function geomXY(info){if(info&0x10){var vx=rd.sint();M.x=M.abs?vx:M.x+vx;}if(info&0x08){var vy=rd.sint();M.y=M.abs?vy:M.y+vy;}}
+    function step(){
+      while(!rd.eof()){
+        var rt=rd.uint();
+        if(rt===0){}                                                        // PAD
+        else if(rt===1){rd.str();unit=rd.real();if(rd.uint()===0)for(var k1=0;k1<12;k1++)rd.uint();} // START
+        else if(rt===2)break;                                               // END
+        else if(rt===3)namesByRef[autoName++]=rd.str();                     // CELLNAME
+        else if(rt===4){var s4=rd.str();namesByRef[rd.uint()]=s4;}
+        else if(rt===5||rt===7||rt===9)rd.str();                            // TEXTSTRING/PROPNAME/PROPSTRING
+        else if(rt===6||rt===8||rt===10){rd.str();rd.uint();}
+        else if(rt===11||rt===12){rd.str();interval();interval();}          // LAYERNAME
+        else if(rt===13){cur=arr('#'+rd.uint());resetM();}                  // CELL
+        else if(rt===14){cur=arr(rd.str());resetM();}
+        else if(rt===15)M.abs=true;                                         // XYABSOLUTE
+        else if(rt===16)M.abs=false;                                        // XYRELATIVE
+        else if(rt===17||rt===18){var inf=rd.u8();                          // PLACEMENT
+          if(inf&0x80)M.pcell=(inf&0x40)?('#'+rd.uint()):rd.str();
+          if(rt===18){if(inf&0x04)rd.real();if(inf&0x02)rd.real();}
+          if(inf&0x20){var px1=rd.sint();M.px=M.abs?px1:M.px+px1;}
+          if(inf&0x10){var py1=rd.sint();M.py=M.abs?py1:M.py+py1;}
+          ref(M.pcell,M.px,M.py,(inf&0x08)?rd.rep():null);}
+        else if(rt===19){var it=rd.u8();                                    // TEXT (parsed, not counted)
+          if(it&0x40){if(it&0x20)rd.uint();else rd.str();}
+          if(it&0x01)rd.uint();if(it&0x02)rd.uint();
+          if(it&0x10){var tx1=rd.sint();M.tx=M.abs?tx1:M.tx+tx1;}
+          if(it&0x08){var ty1=rd.sint();M.ty=M.abs?ty1:M.ty+ty1;}
+          if(it&0x04)rd.rep();}
+        else if(rt===20){var ir=rd.u8();                                    // RECTANGLE
+          if(ir&0x01)rd.uint();if(ir&0x02)rd.uint();
+          if(ir&0x40)M.w=rd.uint();
+          if(ir&0x20)M.h=rd.uint();
+          if(ir&0x80)M.h=M.w;
+          geomXY(ir);
+          shape(M.x,M.y,M.x+M.w,M.y+M.h,(ir&0x04)?rd.rep():null);}
+        else if(rt===21){var ip=rd.u8();                                    // POLYGON
+          if(ip&0x01)rd.uint();if(ip&0x02)rd.uint();
+          if(ip&0x20)M.pp=rd.plist();
+          geomXY(ip);
+          var rp2=(ip&0x04)?rd.rep():null,b=ptsBB(M.pp);
+          shape(M.x+b[0],M.y+b[1],M.x+b[2],M.y+b[3],rp2);}
+        else if(rt===22){var ih=rd.u8();                                    // PATH
+          if(ih&0x01)rd.uint();if(ih&0x02)rd.uint();
+          if(ih&0x40)M.hw=rd.uint();
+          if(ih&0x80){var sc=rd.uint();if(((sc>>2)&3)===3)rd.sint();if((sc&3)===3)rd.sint();}
+          if(ih&0x20)M.pl=rd.plist();
+          geomXY(ih);
+          var rp3=(ih&0x04)?rd.rep():null,b2=ptsBB(M.pl);
+          shape(M.x+b2[0]-M.hw,M.y+b2[1]-M.hw,M.x+b2[2]+M.hw,M.y+b2[3]+M.hw,rp3);}
+        else if(rt>=23&&rt<=25){var itr=rd.u8();                            // TRAPEZOID
+          if(itr&0x01)rd.uint();if(itr&0x02)rd.uint();
+          if(itr&0x40)M.w=rd.uint();
+          if(itr&0x20)M.h=rd.uint();
+          if(rt===23||rt===24)rd.sint();
+          if(rt===23||rt===25)rd.sint();
+          geomXY(itr);
+          shape(M.x,M.y,M.x+M.w,M.y+M.h,(itr&0x04)?rd.rep():null);}
+        else if(rt===26){var ic=rd.u8();                                    // CTRAPEZOID
+          if(ic&0x01)rd.uint();if(ic&0x02)rd.uint();
+          if(ic&0x80)M.ct=rd.uint();
+          if(ic&0x40)M.w=rd.uint();
+          if(ic&0x20)M.h=rd.uint();
+          geomXY(ic);
+          var cw=M.w||M.h,ch=M.h||M.w;
+          shape(M.x,M.y,M.x+cw,M.y+ch,(ic&0x04)?rd.rep():null);}
+        else if(rt===27){var io=rd.u8();                                    // CIRCLE
+          if(io&0x01)rd.uint();if(io&0x02)rd.uint();
+          if(io&0x20)M.r=rd.uint();
+          geomXY(io);
+          shape(M.x-M.r,M.y-M.r,M.x+M.r,M.y+M.r,(io&0x04)?rd.rep():null);}
+        else if(rt===28){var ipr=rd.u8();                                   // PROPERTY
+          if(ipr&0x04){if(ipr&0x02)rd.uint();else rd.str();}
+          if(!(ipr&0x08)){var nv=(ipr>>4)&15;if(nv===15)nv=rd.uint();propValues(nv);}}
+        else if(rt===29){}
+        else if(rt===30){rd.uint();rd.str();}                               // XNAME
+        else if(rt===31){rd.uint();rd.str();rd.uint();}
+        else if(rt===32){rd.uint();rd.str();}                               // XELEMENT
+        else if(rt===33){var ix=rd.u8();rd.uint();                          // XGEOMETRY
+          if(ix&0x01)rd.uint();if(ix&0x02)rd.uint();
+          rd.str();
+          geomXY(ix);
+          if(ix&0x04)rd.rep();}
+        else if(rt===34){var ct2=rd.uint();rd.uint();var cn=rd.uint(),pay=rd.bytes(cn); // CBLOCK
+          if(ct2!==0)throw new Error('CBLOCK compression type '+ct2);
+          return inflateBytes(pay).then(function(raw){rd.s.push([raw,0]);return step();});}
+        else throw new Error('unknown OASIS record '+rt);
+      }
+      return Promise.resolve();
+    }
+    return step().then(function(){
+      var out={};
+      Object.keys(cells).forEach(function(k){var nm2=k;
+        if(k.charAt(0)==='#'){var rn=+k.slice(1);if(namesByRef[rn]!==undefined)nm2=namesByRef[rn];}
+        out[nm2]=cells[k];});
+      Object.keys(out).forEach(function(k){out[k].forEach(function(el){
+        if(el.sn&&el.sn.charAt(0)==='#'){var rn2=+el.sn.slice(1);if(namesByRef[rn2]!==undefined)el.sn=namesByRef[rn2];}});});
+      return {dbu:1e-6/unit,st:out};
+    });
+  }
+
+  // ── shared model analysis ──
+  function modelTops(pr){var st=pr.st,ref={},nm;
+    for(nm in st)st[nm].forEach(function(o){if(o.sn)ref[o.sn]=1;});
+    var tops=Object.keys(st).filter(function(k){return !ref[k];});
+    if(!tops.length)tops=Object.keys(st);
+    return tops;}
+  function modelBBox(pr){var memo={},B=null;
+    modelTops(pr).forEach(function(nm){var b2=bb(pr.st,nm,memo,0);if(b2){if(!B)B=b2.slice();else{B[0]=Math.min(B[0],b2[0]);B[1]=Math.min(B[1],b2[1]);B[2]=Math.max(B[2],b2[2]);B[3]=Math.max(B[3],b2[3]);}}});
+    return B;}
+  // density = fraction of correction tiles (2048 px across at the current pixel
+  // size) containing any pattern, matching the estimator's tile model.
+  // Each distinct cell is rasterized ONCE into a coarse occupancy mask at tile
+  // pitch (memoized), and instances OR that mask in at their placement — so a
+  // large but internally sparse cell contributes its real pattern, not a solid
+  // bounding box, even when arrayed thousands of times. Shape footprints use
+  // bounding boxes and a global work budget bounds runtime; fallbacks always
+  // err toward MORE occupancy (safe for hardware sizing).
+  function measureDensity(pr,B,pxNm){
+    var st=pr.st,pitch=TILE*pxNm*1e-9/pr.dbu;
+    var W=B[2]-B[0],H=B[3]-B[1];if(!(W>0)||!(H>0)||!(pitch>0))return null;
+    var nx=Math.max(1,ceil(W/pitch)),ny=Math.max(1,ceil(H/pitch)),f=1;
+    while((nx/f)*(ny/f)>4e6)f*=2;
+    var gx=Math.ceil(nx/f),gy=Math.ceil(ny/f),gp=pitch*f;
+    // masks work at 1/SUB tile pitch: stamping a mask at an arbitrary offset maps
+    // each set sub-cell by its center, so misalignment error is ≤ pitch/(2·SUB)
+    // and aligned stamps are immune to float noise; the final count collapses
+    // SUB×SUB sub-cells back to real tiles ("any pattern in tile").
+    var SUB=4,fq=gp/SUB,bmemo={},masks={},budget=4e7,maskBytes=3e8;
+    function mset(mk,x1,y1,x2,y2){
+      var tx1=Math.max(0,Math.floor((x1-mk.x0)/fq)),ty1=Math.max(0,Math.floor((y1-mk.y0)/fq));
+      var tx2=Math.min(mk.mw-1,Math.floor((x2-mk.x0)/fq)),ty2=Math.min(mk.mh-1,Math.floor((y2-mk.y0)/fq));
+      if(tx2<tx1||ty2<ty1)return;
+      budget-=((tx2-tx1+1)*(ty2-ty1+1))>>4;
+      for(var ty=ty1;ty<=ty2;ty++){var ro=ty*mk.mw;for(var tx=tx1;tx<=tx2;tx++)mk.bits[ro+tx]=1;}}
+    function stamp(mk,cm,dx,dy){
+      budget-=(cm.mw*cm.mh)>>4;
+      var bx=cm.x0+dx-mk.x0+0.5*fq,by=cm.y0+dy-mk.y0+0.5*fq;
+      for(var my=0;my<cm.mh;my++){var ro=my*cm.mw,gty=Math.floor((by+my*fq)/fq);
+        if(gty<0||gty>=mk.mh)continue;var gro=gty*mk.mw;
+        for(var mx=0;mx<cm.mw;mx++){if(!cm.bits[ro+mx])continue;
+          var gtx=Math.floor((bx+mx*fq)/fq);if(gtx>=0&&gtx<mk.mw)mk.bits[gro+gtx]=1;}}}
+    function placeCell(mk,nm,dx,dy,d){
+      var cb=bb(st,nm,bmemo,d);if(!cb)return;
+      var cm=budget>0?cellMask(nm,d):null;
+      if(cm){stamp(mk,cm,dx,dy);return;}
+      // no mask (too big / budget) → draw the cell's contents directly at this
+      // offset; solid-bbox fill only as a last resort when out of budget
+      if(budget>0&&d<60&&st[nm])drawInto(mk,st[nm],dx,dy,d+1);
+      else mset(mk,cb[0]+dx,cb[1]+dy,cb[2]+dx,cb[3]+dy);}
+    function drawInto(mk,els,ox,oy,d){
+      for(var i2=0;i2<els.length;i2++){var o=els[i2];budget--;
+        if(o.t==='p'){var x1=1/0,y1=1/0,x2=-1/0,y2=-1/0;
+          for(var k=0;k<o.xy.length;k++){var p4=o.xy[k];if(p4[0]<x1)x1=p4[0];if(p4[1]<y1)y1=p4[1];if(p4[0]>x2)x2=p4[0];if(p4[1]>y2)y2=p4[1];}
+          if(x1<=x2)mset(mk,x1+ox,y1+oy,x2+ox,y2+oy);}
+        else if(o.t==='s'&&o.xy.length)placeCell(mk,o.sn,o.xy[0][0]+ox,o.xy[0][1]+oy,d+1);
+        else if(o.t==='a'&&o.xy.length>=3){
+          var p0=o.xy[0],p1=o.xy[1],p2=o.xy[2],cb3=bb(st,o.sn,bmemo,d+1);
+          if(!cb3)continue; // child has no printable geometry → nothing to mark
+          if(!(o.cr&&o.cr[0]>0&&o.cr[1]>0)||budget<0){
+            // no col/row info (or out of budget) → corner-extent fill, conservative
+            var xs=[p0[0],p1[0],p2[0],p1[0]+p2[0]-p0[0]],ys=[p0[1],p1[1],p2[1],p1[1]+p2[1]-p0[1]];
+            mset(mk,Math.min.apply(null,xs)+cb3[0]+ox,Math.min.apply(null,ys)+cb3[1]+oy,
+                    Math.max.apply(null,xs)+cb3[2]+ox,Math.max.apply(null,ys)+cb3[3]+oy);continue;}
+          var cols=o.cr[0],rows=o.cr[1];
+          var sxx=(p1[0]-p0[0])/cols,sxy=(p1[1]-p0[1])/cols,syx=(p2[0]-p0[0])/rows,syy=(p2[1]-p0[1])/rows;
+          var c,r3,qx,qy;
+          if(cols*rows<=Math.min(5e5,Math.max(0,budget))){ // affordable → place every instance exactly
+            var smallChild=(cb3[2]-cb3[0])<=3*gp&&(cb3[3]-cb3[1])<=3*gp;
+            for(c=0;c<cols;c++)for(r3=0;r3<rows;r3++){qx=p0[0]+sxx*c+syx*r3+ox;qy=p0[1]+sxy*c+syy*r3+oy;
+              if(smallChild||budget<0)mset(mk,cb3[0]+qx,cb3[1]+qy,cb3[2]+qx,cb3[3]+qy);
+              else placeCell(mk,o.sn,qx,qy,d+1);}
+            budget-=cols*rows;continue;}
+          // huge array → footprint fill over the exact instance span (last
+          // instance at step·(count−1), NOT the one-past GDS corner point)
+          var spx=sxx*(cols-1),spy=sxy*(cols-1),srx=syx*(rows-1),sry=syy*(rows-1);
+          var lx=Math.min(0,spx)+Math.min(0,srx),hx=Math.max(0,spx)+Math.max(0,srx);
+          var ly=Math.min(0,spy)+Math.min(0,sry),hy=Math.max(0,spy)+Math.max(0,sry);
+          var colStep=Math.max(Math.abs(sxx),Math.abs(sxy)),rowStep=Math.max(Math.abs(syx),Math.abs(syy));
+          if(colStep<=gp&&rowStep<=gp||colStep>gp&&rowStep>gp){ // dense both ways, or too sparse to resolve
+            mset(mk,p0[0]+lx+cb3[0]+ox,p0[1]+ly+cb3[1]+oy,p0[0]+hx+cb3[2]+ox,p0[1]+hy+cb3[3]+oy);}
+          else{                                  // dense along one axis → one strip per step of the sparse axis
+            var byRow=(colStep<=gp),n=byRow?rows:cols;
+            var vx=byRow?syx:sxx,vy=byRow?syy:sxy;
+            var dlx=byRow?Math.min(0,spx):Math.min(0,srx),dhx=byRow?Math.max(0,spx):Math.max(0,srx);
+            var dly=byRow?Math.min(0,spy):Math.min(0,sry),dhy=byRow?Math.max(0,spy):Math.max(0,sry);
+            if(n>Math.max(0,budget))mset(mk,p0[0]+lx+cb3[0]+ox,p0[1]+ly+cb3[1]+oy,p0[0]+hx+cb3[2]+ox,p0[1]+hy+cb3[3]+oy);
+            else{for(c=0;c<n;c++){qx=p0[0]+vx*c+ox;qy=p0[1]+vy*c+oy;
+                mset(mk,cb3[0]+qx+dlx,cb3[1]+qy+dly,cb3[2]+qx+dhx,cb3[3]+qy+dhy);}
+              budget-=n;}}}}}
+    function cellMask(nm,d){
+      if(d>60||!st[nm])return null;
+      if(masks[nm]!==undefined)return masks[nm];
+      masks[nm]=null; // cycle guard; refused masks stay null → bbox fallback
+      var cb=bb(st,nm,bmemo,d);if(!cb)return null;
+      var mw=Math.max(1,Math.floor((cb[2]-cb[0])/fq)+1),mh=Math.max(1,Math.floor((cb[3]-cb[1])/fq)+1);
+      if(mw*mh>6.4e7||maskBytes-mw*mh<0||budget<0)return null;
+      maskBytes-=mw*mh;
+      var mk={x0:cb[0],y0:cb[1],mw:mw,mh:mh,bits:new Uint8Array(mw*mh)};
+      drawInto(mk,st[nm],0,0,d);
+      masks[nm]=mk;return mk;}
+    // top cells draw straight into the fine occupancy grid (no self-stamp)
+    var fgx=SUB*gx,fgy=SUB*gy;
+    var occ={x0:B[0],y0:B[1],mw:fgx,mh:fgy,bits:new Uint8Array(fgx*fgy)};
+    modelTops(pr).forEach(function(nm){if(st[nm])drawInto(occ,st[nm],0,0,0);});
+    var cnt=0;
+    for(var j=0;j<gy;j++)for(var i3=0;i3<gx;i3++){
+      var hit=0;
+      for(var a=0;a<SUB&&!hit;a++){var ro2=(SUB*j+a)*fgx+SUB*i3;
+        for(var b2=0;b2<SUB;b2++)if(occ.bits[ro2+b2]){hit=1;break;}}
+      if(hit)cnt++;}
+    return cnt/(gx*gy);
+  }
+  /*PARSE-END*/
+
+  // ── upload wiring ──
+  var loaded=null;
+  function showDrop(html){$('hwDropRes').innerHTML=html;}
+  function fmtPct(d){var p=d*100;return p<1?p.toFixed(1):Math.round(p).toString();}
+  function applyDensity(){
+    if(!loaded||loaded.manualD)return;
+    var d=measureDensity(loaded.pr,loaded.B,S.px);
+    if(d==null)return;
+    S.d=Math.min(1,Math.max(0.001,d));
+    $('hwD').value=Math.max(1,Math.min(100,Math.round(S.d*100)));
+    showDrop('<b>'+loaded.name+'</b><br><span class="ok">Detected '+loaded.w.toFixed(2)+' × '+loaded.h.toFixed(2)+' mm · density ≈ '+fmtPct(S.d)+'%</span> (at '+S.px+' nm pixel — recomputed if you change it)');
+  }
+  function applyModel(pr,name){
+    var B=modelBBox(pr);
+    if(!B||!(B[2]>B[0])){showDrop('<span class="err">No geometry found — set size and density manually.</span>');return;}
+    var w=(B[2]-B[0])*pr.dbu*1000,h=(B[3]-B[1])*pr.dbu*1000;
+    S.w=Math.min(33,Math.max(0.5,Math.round(w*10)/10));S.h=Math.min(33,Math.max(0.5,Math.round(h*10)/10));
+    $('hwW').value=S.w;$('hwH').value=S.h;
+    loaded={pr:pr,B:B,name:name,w:w,h:h,manualD:false};
+    applyDensity();
+    render();
+  }
+  function handleFile(file){
+    var nm=(file.name||'').toLowerCase();
+    var isOas=/\.(oas|oasis)$/.test(nm),isGds=/\.(gds|gds2|gdsii)$/.test(nm);
+    if(!isOas&&!isGds){showDrop('<span class="err">Unsupported file — please upload a .gds or .oas layout.</span>');return;}
+    showDrop('Reading '+file.name+' …');
+    var rd2=new FileReader();
+    rd2.onerror=function(){showDrop('<span class="err">Could not read file.</span>');};
+    rd2.onload=function(ev){
+      var buf=ev.target.result;
+      try{
+        if(isGds)applyModel(parseGDS(buf),file.name);
+        else parseOAS(buf).then(function(pr){applyModel(pr,file.name);})['catch'](function(){showDrop('<span class="err">Could not parse this OASIS file — set size and density manually.</span>');});
+      }catch(e){showDrop('<span class="err">Parse error — set size and density manually.</span>');}
+    };
+    rd2.readAsArrayBuffer(file);
+  }
+  var drop=$('hwDrop'),fi=$('hwFile');
+  drop.addEventListener('click',function(){fi.click();});
+  fi.addEventListener('change',function(){if(this.files&&this.files[0])handleFile(this.files[0]);});
+  drop.addEventListener('dragover',function(e){e.preventDefault();drop.classList.add('over');});
+  drop.addEventListener('dragleave',function(){drop.classList.remove('over');});
+  drop.addEventListener('drop',function(e){e.preventDefault();drop.classList.remove('over');if(e.dataTransfer.files&&e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
+  // manual density input wins over auto-detection
+  $('hwD').addEventListener('input',function(){if(loaded)loaded.manualD=true;});
+  Array.prototype.forEach.call(document.querySelectorAll('.hw-chip'),function(b){b.addEventListener('click',function(){if(loaded)loaded.manualD=true;});});
+  // pixel size changes the tile grid → re-measure density from the loaded file
+  var densTimer=null;
+  $('hwPx').addEventListener('input',function(){if(!loaded)return;clearTimeout(densTimer);densTimer=setTimeout(function(){applyDensity();render();},300);});
+
+  render();
+})();
 </script>
 
 </body>

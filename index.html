@@ -591,7 +591,7 @@
     <li><a href="#features">Features</a></li>
     <li><a href="#workflow">Workflow</a></li>
     <li><a href="#comparison">Comparison</a></li>
-    <li><a href="#hardware">Sizing</a></li>
+    <li><a href="#hardware">Planner</a></li>
     <li><a href="#validation">Validation</a></li>
     <li><a href="#references">References</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -975,6 +975,7 @@ flowchart LR
   .hw-table tr.ref{background:rgba(37,99,235,.06)}
   .hw-tag{display:inline-block;font-size:.62rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
     color:#fff;background:var(--blue);border-radius:20px;padding:.1rem .45rem;margin-left:.4rem;vertical-align:middle}
+  .hw-proj{color:var(--text-muted);margin-left:.15rem;cursor:help}
   .hw-note{font-size:.75rem;color:var(--text-muted);margin-top:.6rem;line-height:1.5}
   /* density guide */
   .hw-guide{margin-top:1.5rem;background:#fff;border:1px solid var(--border);border-left:5px solid var(--blue);border-radius:var(--radius);padding:1.2rem 1.4rem;box-shadow:var(--shadow)}
@@ -1019,9 +1020,9 @@ flowchart LR
 </style>
 <section id="hardware">
   <div class="container">
-    <div class="section-label">Hardware Sizing</div>
+    <div class="section-label">Capacity Planning</div>
     <h2 class="section-title">How much hardware do you need?</h2>
-    <p>Estimate the GPU fleet to finish OPC on your layout by your deadline — grounded in <strong>measured</strong> production runs (~4&nbsp;s per correction tile on an RTX&nbsp;Pro&nbsp;6000). Upload a GDS or OASIS file to auto-detect the die size <em>and</em> pattern density, or set them directly. Everything runs in your browser — your file never leaves your computer.</p>
+    <p>Estimate the GPU fleet to finish OPC on your layout by your deadline — grounded in <strong>measured</strong> production runs (median 2.5&nbsp;s per correction tile on an RTX&nbsp;4090; an RTX&nbsp;Pro&nbsp;6000 runs four isolated MIG workers for ≈1&nbsp;s per tile per card). Upload a GDS or OASIS file to auto-detect the die size <em>and</em> pattern density, or set them directly. Everything runs in your browser — your file never leaves your computer.</p>
 
     <div class="hw-wrap">
       <!-- inputs -->
@@ -1066,7 +1067,7 @@ flowchart LR
         <div class="hw-panel-b">
           <div class="hw-panel-h" style="border:0;padding:0 0 .4rem">Estimated hardware investment</div>
           <div style="overflow-x:auto"><table class="hw-table"><thead><tr><th>GPU</th><th>Units</th><th>Finish</th><th>Total&nbsp;$</th></tr></thead><tbody id="hwCostBody"></tbody></table></div>
-          <div class="hw-note">A recommended Pro&nbsp;6000 node ships fully configured — 96&nbsp;GB per card, ECC memory, the OPC+ software stack, and support. Runtime depends on your pattern, so treat this as a planning estimate; we confirm the exact figure from a calibration run on your own layout. Hardware prices are indicative market values.</div>
+          <div class="hw-note">Unmarked rows are <strong>measured</strong> on production correction tiles (medians; distributions are tight on desktop GPUs — 4090: median 2.50&nbsp;s, p90 2.52&nbsp;s). Rows marked&nbsp;† are projected from memory bandwidth, which our measurements show governs throughput. The Pro&nbsp;6000 figure runs each card as four isolated MIG workers (median 3.3&nbsp;s per tile per worker; dense tiles can reach ~11&nbsp;s, which the planning value cushions). A recommended Pro&nbsp;6000 node ships fully configured — 96&nbsp;GB per card, ECC memory, the OPC+ software stack, and support. Treat this as a planning estimate; we confirm the exact figure from a calibration run on your own layout. Hardware prices are indicative market values.</div>
           <div style="margin-top:1rem"><a href="#contact" class="btn btn-primary" style="display:inline-block">Get an exact quote for your layout →</a></div>
         </div>
       </div>
@@ -1334,14 +1335,24 @@ flowchart LR
 (function(){
   "use strict";
   var S={w:16,h:16,px:2.6,d:0.10,dl:3};
-  // 4 s per active tile on a FULL RTX Pro 6000 (no MIG) = 0.25 tiles/s.
-  // MIG-4 yields 4 isolated workers at ~21 s each = 0.19 tiles/s — i.e. ~24% LESS
-  // aggregate throughput. Sizing below assumes full-card mode; other GPUs run
-  // full-GPU too, scaled by FP32 TFLOPS from this same anchor.
-  var SECT=4, TILE=2048, S1=0.0011, S3=0.0033, REF_TF=125;
-  // [name, FP32 TFLOPS, price USD, isRef] — editable market estimates
-  var GPUS=[["RTX Pro 6000",125,8500,true],["RTX 5090",105,2000],["RTX 4090",83,1700],
-            ["L40S",92,9000],["H100 80GB",67,28000],["A100 80GB",19.5,15000]];
+  // Measured production throughput (July 2026 platform update):
+  //   RTX 4090        median 2.50 s/tile (n=979,  p90 2.52 s)
+  //   RTX 5080        median 2.73 s/tile (n=429,  p90 2.74 s)
+  //   RTX 4070 SUPER  median 4.74 s/tile (n=253,  p90 4.75 s)
+  //   RTX Pro 6000    MIG 1g.24gb slice, 2 streams: median 3.3 s, p90 11.4 s (n=1559)
+  //     → 4 slices per 96 GB card; planning value 4.0 s/slice ≈ 1.0 s/tile per card.
+  // Measured cards scale with MEMORY BANDWIDTH, not FP32 TFLOPS (2.50/2.73/4.74 s
+  // vs 1008/960/504 GB/s). Unmeasured GPUs are projected: s/tile ≈ 2.5 × 1008/BW.
+  var TILE=2048, S1=0.0011, S3=0.0033;
+  // [name, s per tile per card, price USD, {ref:recommended, meas:measured}]
+  var GPUS=[["RTX Pro 6000",1.0,8500,{ref:1,meas:1}],
+            ["RTX 5090",1.4,2000,{}],
+            ["RTX 4090",2.5,1700,{meas:1}],
+            ["RTX 5080",2.7,1000,{meas:1}],
+            ["RTX 4070 SUPER",4.7,600,{meas:1}],
+            ["L40S",2.9,9000,{}],
+            ["H100 80GB",1.3,28000,{}]];
+  var PRO_S=GPUS[0][1];
   var $=function(id){return document.getElementById(id);};
   var ceil=function(x){return Math.ceil(x-1e-9);};
   function fInt(n){if(n>=1e9)return (n/1e9).toFixed(2)+'B';if(n>=1e6)return (n/1e6).toFixed(n<1e7?2:1)+'M';if(n>=1e3)return (n/1e3).toFixed(n<1e4?1:0)+'k';return Math.round(n).toString();}
@@ -1355,8 +1366,8 @@ flowchart LR
     var active=Math.round(total*S.d);
     var floor=total*(S1+S3)/86400;                 // serial step1+step3 (days)
     var avail=S.dl-floor, feasible=avail>0.002;
-    var cards=feasible?Math.max(1,ceil(active*SECT/(avail*86400))):null;
-    var finish=feasible?floor+active*SECT/(cards*86400):null;
+    var cards=feasible?Math.max(1,ceil(active*PRO_S/(avail*86400))):null;
+    var finish=feasible?floor+active*PRO_S/(cards*86400):null;
     return {total:total,active:active,floor:floor,avail:avail,feasible:feasible,cards:cards,finish:finish};
   }
 
@@ -1377,10 +1388,10 @@ flowchart LR
       $('hwFinish').innerHTML='<span style="color:var(--red)">≥'+fDays(r.floor)+'</span>';
       $('hwCallout').innerHTML='<b style="color:var(--red)">Schedule too tight.</b> Preparing and assembling a layout this size takes about <b>'+fDays(r.floor)+'</b> on its own. Try a coarser pixel, a lower density, or a longer schedule — or talk to us about options.';
     }
-    var avail=Math.max(1e-6,r.avail)*86400, k=(1/SECT)/REF_TF, rows=[];
-    GPUS.forEach(function(g){var tps=g[1]*k;var units=r.feasible?Math.max(1,ceil(r.active/(tps*avail))):null;var cost=units?units*g[2]:null;rows.push([g,tps,units,cost]);});
-    $('hwCostBody').innerHTML=rows.map(function(o){var g=o[0],units=o[2],cost=o[3];var fin=units?r.floor+r.active/(o[1]*units*86400):null;
-      return '<tr class="'+(g[3]?'ref':'')+'"><td>'+g[0]+(g[3]?' <span class="hw-tag">Recommended</span>':'')+'</td><td>'+(units!=null?units.toLocaleString():'—')+'</td><td>'+(fin!=null?fDays(fin):'—')+'</td><td>'+(cost!=null?fMoney(cost):'—')+'</td></tr>';}).join('');
+    var avail=Math.max(1e-6,r.avail)*86400, rows=[];
+    GPUS.forEach(function(g){var units=r.feasible?Math.max(1,ceil(r.active*g[1]/avail)):null;var cost=units?units*g[2]:null;rows.push([g,units,cost]);});
+    $('hwCostBody').innerHTML=rows.map(function(o){var g=o[0],units=o[1],cost=o[2];var fin=units?r.floor+r.active*g[1]/(units*86400):null;
+      return '<tr class="'+(g[3].ref?'ref':'')+'"><td>'+g[0]+(g[3].ref?' <span class="hw-tag">Recommended</span>':'')+(g[3].meas?'':'<span class="hw-proj" title="Projected from memory bandwidth">†</span>')+'</td><td>'+(units!=null?units.toLocaleString():'—')+'</td><td>'+(fin!=null?fDays(fin):'—')+'</td><td>'+(cost!=null?fMoney(cost):'—')+'</td></tr>';}).join('');
   }
 
   // ── ranges + chips ──

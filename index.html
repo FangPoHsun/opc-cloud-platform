@@ -1022,7 +1022,7 @@ flowchart LR
   <div class="container">
     <div class="section-label">Capacity Planning</div>
     <h2 class="section-title">How much hardware do you need?</h2>
-    <p>Estimate the GPU fleet to finish OPC on your layout by your deadline — grounded in <strong>measured</strong> production runs (median 2.5&nbsp;s per correction tile on an RTX&nbsp;4090; an RTX&nbsp;Pro&nbsp;6000 runs four isolated MIG workers for ≈1&nbsp;s per tile per card). Upload a GDS or OASIS file to auto-detect the die size <em>and</em> pattern density, or set them directly. Everything runs in your browser — your file never leaves your computer.</p>
+    <p>Estimate the GPU fleet to finish OPC on your layout by your deadline — grounded in <strong>measured</strong> production runs on fully-patterned tiles (2.1&nbsp;s per correction tile on an RTX&nbsp;4090; an RTX&nbsp;Pro&nbsp;6000 runs four isolated MIG workers for ≈1.1&nbsp;s per tile per card — about 1.9×&nbsp;a&nbsp;4090). Upload a GDS or OASIS file to auto-detect the die size <em>and</em> pattern density, or set them directly. Everything runs in your browser — your file never leaves your computer.</p>
 
     <div class="hw-wrap">
       <!-- inputs -->
@@ -1067,7 +1067,7 @@ flowchart LR
         <div class="hw-panel-b">
           <div class="hw-panel-h" style="border:0;padding:0 0 .4rem">Estimated hardware investment</div>
           <div style="overflow-x:auto"><table class="hw-table"><thead><tr><th>GPU</th><th>Units</th><th>Finish</th><th>Total&nbsp;$</th></tr></thead><tbody id="hwCostBody"></tbody></table></div>
-          <div class="hw-note">Unmarked rows are <strong>measured</strong> on production correction tiles (medians; distributions are tight on desktop GPUs — 4090: median 2.50&nbsp;s, p90 2.52&nbsp;s). Rows marked&nbsp;† are projected from memory bandwidth, which our measurements show governs throughput. The Pro&nbsp;6000 figure runs each card as four isolated MIG workers (median 3.3&nbsp;s per tile per worker; dense tiles can reach ~11&nbsp;s, which the planning value cushions). A recommended Pro&nbsp;6000 node ships fully configured — 96&nbsp;GB per card, ECC memory, the OPC+ software stack, and support. Treat this as a planning estimate; we confirm the exact figure from a calibration run on your own layout. Hardware prices are indicative market values.</div>
+          <div class="hw-note">Unmarked rows are <strong>measured</strong> on fully-patterned production tiles — sparse, mostly-empty regions run far faster, so these are conservative planning values (4090: 2.10&nbsp;s per tile, ≈1,700&nbsp;tiles/hr). Rows marked&nbsp;† are projected from memory bandwidth, which our measurements show governs throughput. The Pro&nbsp;6000 figure runs each card as four isolated MIG workers (4.49&nbsp;s per tile per worker → ≈1.1&nbsp;s per tile per card, about 1.9× the throughput of a 4090). A recommended Pro&nbsp;6000 node ships fully configured — 96&nbsp;GB per card, ECC memory, the OPC+ software stack, and support. Treat this as a planning estimate; we confirm the exact figure from a calibration run on your own layout. Hardware prices are indicative market values.</div>
           <div style="margin-top:1rem"><a href="#contact" class="btn btn-primary" style="display:inline-block">Get an exact quote for your layout →</a></div>
         </div>
       </div>
@@ -1335,23 +1335,25 @@ flowchart LR
 (function(){
   "use strict";
   var S={w:16,h:16,px:2.6,d:0.10,dl:3};
-  // Measured production throughput (July 2026 platform update):
-  //   RTX 4090        median 2.50 s/tile (n=979,  p90 2.52 s)
-  //   RTX 5080        median 2.73 s/tile (n=429,  p90 2.74 s)
-  //   RTX 4070 SUPER  median 4.74 s/tile (n=253,  p90 4.75 s)
-  //   RTX Pro 6000    MIG 1g.24gb slice, 2 streams: median 3.3 s, p90 11.4 s (n=1559)
-  //     → 4 slices per 96 GB card; planning value 4.0 s/slice ≈ 1.0 s/tile per card.
-  // Measured cards scale with MEMORY BANDWIDTH, not FP32 TFLOPS (2.50/2.73/4.74 s
-  // vs 1008/960/504 GB/s). Unmeasured GPUs are projected: s/tile ≈ 2.5 × 1008/BW.
+  // Measured production throughput (Aug 2026, dense chunks only — all 2,500 tiles
+  // per chunk carry real pattern; sparse chunks finish ~40× faster and are excluded,
+  // so these are conservative planning values):
+  //   RTX 4090        2.10 s/tile (510 chunks)  → 1,717 tiles/hr
+  //   RTX 5080        2.29 s/tile (236 chunks)  → 1,574 tiles/hr
+  //   RTX 4070 SUPER  4.02 s/tile (134 chunks)  →   897 tiles/hr
+  //   RTX Pro 6000    4.49 s/tile per MIG 1g.24gb slice (1,454 chunks) → 802 tiles/hr/slice
+  //     → 4 slices per 96 GB card → 1.12 s/tile ≈ 3,200 tiles/hr per card (1.9× a 4090).
+  // Measured cards scale with MEMORY BANDWIDTH, not FP32 TFLOPS (2.10/2.29/4.02 s
+  // vs 1008/960/504 GB/s). Unmeasured GPUs are projected: s/tile ≈ 2.10 × 1008/BW.
   var TILE=2048, S1=0.0011, S3=0.0033;
   // [name, s per tile per card, price USD, {ref:recommended, meas:measured}]
-  var GPUS=[["RTX Pro 6000",1.0,8500,{ref:1,meas:1}],
-            ["RTX 5090",1.4,2000,{}],
-            ["RTX 4090",2.5,1700,{meas:1}],
-            ["RTX 5080",2.7,1000,{meas:1}],
-            ["RTX 4070 SUPER",4.7,600,{meas:1}],
-            ["L40S",2.9,9000,{}],
-            ["H100 80GB",1.3,28000,{}]];
+  var GPUS=[["RTX Pro 6000",1.12,8500,{ref:1,meas:1}],
+            ["RTX 5090",1.2,2000,{}],
+            ["RTX 4090",2.1,1700,{meas:1}],
+            ["RTX 5080",2.29,1000,{meas:1}],
+            ["RTX 4070 SUPER",4.02,600,{meas:1}],
+            ["L40S",2.45,9000,{}],
+            ["H100 80GB",1.06,28000,{}]];
   var PRO_S=GPUS[0][1];
   var $=function(id){return document.getElementById(id);};
   var ceil=function(x){return Math.ceil(x-1e-9);};
